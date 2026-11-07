@@ -1,0 +1,15 @@
+secure-gpu-upscaler/
+├── app/
+│   ├── __init__.py
+│   ├── engine.py       # Moteur d'inférence GPU (Real-ESRGAN, tiling, FP16)
+│   ├── metrics.py      # Calculs mathématiques SSIM / PSNR
+│   ├── security.py     # Validation des images (anti-DoS, dimensions max)
+│   └── main.py         # API FastAPI
+├── tests/
+│   ├── fixtures/       # Images de test (256x256, 512x512)
+│   └── test_pipeline.py
+├── scripts/
+│   └── download_weights.py
+├── Dockerfile
+├── PROJECT_STATE.md
+└── requirements.txt
