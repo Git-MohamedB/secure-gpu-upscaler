@@ -1,0 +1,8 @@
+*.pth
+*.onnx
+__pycache__/
+.venv/
+output/
+*.log
+.pytest_cache/
+weights/
