@@ -9,10 +9,11 @@
 
 ## 3. Avancement
 - [x] Jalon 0 : Arborescence et environnement initialisés
-- [ ] Jalon 1 : Moteur GPU local, FP16 et Métriques
+- [x] Jalon 1 : Moteur GPU local, FP16 et Métriques
 - [ ] Jalon 2 : API FastAPI et Sécurité anti-DoS
 - [ ] Jalon 3 : Dockerisation GPU et Durcissement
 - [ ] Jalon 4 : Audit de sécurité et Documentation CV
 
 ## 4. Prochaine action immédiate
-- Exécuter le Jalon 1 (téléchargement du modèle et script d'inférence GPU).
+- Jalon 1 validé sur GPU (RTX 4060 Ti : ~326 ms, 559 Mo VRAM pic, sortie 1024x1024 vérifiée).
+- Exécuter le Jalon 2 (API FastAPI et sécurité anti-DoS : `app/security.py`, `app/main.py`).
