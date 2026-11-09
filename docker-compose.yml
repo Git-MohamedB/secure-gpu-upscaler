@@ -1,0 +1,24 @@
+services:
+  upscaler:
+    build: .
+    image: secure-gpu-upscaler:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./weights:/app/weights:ro
+    # Réservation GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # Quotas cgroups
+    mem_limit: 4g
+    cpus: 2.0
+    # Durcissement
+    security_opt:
+      - "no-new-privileges:true"
+    restart: unless-stopped
+
