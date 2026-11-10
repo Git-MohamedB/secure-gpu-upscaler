@@ -9,3 +9,5 @@ scikit-image==0.24.0
 pydantic==2.8.2
 pillow==10.4.0
 pytest==8.2.2
+httpx
+python-multipart
