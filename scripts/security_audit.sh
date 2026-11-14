@@ -85,6 +85,14 @@ if docker inspect "${CONTAINER_NAME}" >/dev/null 2>&1; then
         check_warn "Aucun quota NanoCPUs explicite détecté."
     fi
 
+    # Vérification du système de fichiers racine en lecture seule
+    RO_ROOTFS=$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "${CONTAINER_NAME}")
+    if [ "${RO_ROOTFS}" = "true" ]; then
+        check_pass "Système de fichiers racine en lecture seule (ReadonlyRootfs=true)."
+    else
+        check_fail "Système de fichiers racine inscriptible (ReadonlyRootfs=${RO_ROOTFS})."
+    fi
+
     # Vérification des volumes en lecture seule (read-only)
     RO_MOUNTS=$(docker inspect --format '{{range .Mounts}}{{if .RW}}RW: {{.Destination}} {{else}}RO: {{.Destination}} {{end}}{{end}}' "${CONTAINER_NAME}")
     if echo "${RO_MOUNTS}" | grep -q "RO: /app/weights"; then

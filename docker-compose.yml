@@ -3,7 +3,7 @@ services:
     build: .
     image: secure-gpu-upscaler:latest
     ports:
-      - "8000:8000"
+      - "${BIND_IP:-127.0.0.1}:8000:8000"
     volumes:
       - ./weights:/app/weights:ro
     # Réservation GPU
@@ -18,6 +18,11 @@ services:
     mem_limit: 4g
     cpus: 2.0
     # Durcissement
+    read_only: true
+    tmpfs:
+      - "/tmp:size=64m,mode=1777"
+    cap_drop:
+      - ALL
     security_opt:
       - "no-new-privileges:true"
     restart: unless-stopped
