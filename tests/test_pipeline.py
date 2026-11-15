@@ -48,7 +48,7 @@ def test_nominal_upload(client):
     r = client.post("/api/v1/upscale", files={"file": ("ok.png", _png_bytes(), "image/png")})
     assert r.status_code == 200
     assert r.headers["content-type"] == "image/png"
-    for h in ("X-Inference-Time-Ms", "X-VRAM-Usage-MB", "X-SSIM-Score"):
+    for h in ("X-Request-ID", "X-Inference-Time-Ms", "X-VRAM-Usage-MB", "X-SSIM-Score"):
         assert h in r.headers
     out = cv2.imdecode(np.frombuffer(r.content, np.uint8), cv2.IMREAD_COLOR)
     assert out.shape == (256, 256, 3)

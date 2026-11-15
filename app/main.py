@@ -1,8 +1,12 @@
 """API FastAPI : Secure GPU Upscaler."""
+import json
+import logging
 import os
 import threading
 import time
+import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
@@ -18,12 +22,53 @@ ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = os.getenv("MODEL_PATH", str(ROOT / "weights" / "RealESRGAN_x4plus_anime_6B.pth"))
 TILE_SIZE = 512
 
+_EXTRA_FIELDS = (
+    "event",
+    "request_id",
+    "input_shape",
+    "inference_ms",
+    "vram_peak_mb",
+    "ssim",
+)
+
+
+class JsonFormatter(logging.Formatter):
+    """Sérialise les logs applicatifs en JSON structuré (une ligne par événement)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        for field in _EXTRA_FIELDS:
+            value = getattr(record, field, None)
+            if value is not None:
+                payload[field] = value
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def _get_logger() -> logging.Logger:
+    log = logging.getLogger("upscaler")
+    if not log.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(JsonFormatter())
+        log.addHandler(handler)
+        log.setLevel(logging.INFO)
+        log.propagate = False
+    return log
+
+
+logger = _get_logger()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Chargement unique du modèle en VRAM
     app.state.engine = UpscaleEngine(MODEL_PATH, device="cuda", half=True)
     app.state.gpu_lock = threading.Lock()  # une seule inférence GPU à la fois
+    logger.info("Modèle chargé en VRAM", extra={"event": "model_loaded"})
     yield
     del app.state.engine
     if torch.cuda.is_available():
@@ -49,6 +94,8 @@ def _run_inference(engine: UpscaleEngine, lock: threading.Lock, bgr):
 
 @app.post("/api/v1/upscale")
 async def upscale(request: Request, file: UploadFile = File(...)):
+    req_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
+
     # Lecture bornée : jamais plus de MAX_FILE_SIZE + 1 octets en mémoire
     data = await file.read(MAX_FILE_SIZE + 1)
     bgr = validate_image_upload(data)
@@ -60,16 +107,30 @@ async def upscale(request: Request, file: UploadFile = File(...)):
         )
     except torch.cuda.OutOfMemoryError:
         torch.cuda.empty_cache()
+        logger.error("Dépassement mémoire VRAM lors de l'inférence", extra={"event": "gpu_oom", "request_id": req_id})
         raise HTTPException(status_code=503, detail="VRAM insuffisante, réessayer plus tard.")
 
     ok, png = cv2.imencode(".png", cv2.cvtColor(result_rgb, cv2.COLOR_RGB2BGR))
     if not ok:
         raise HTTPException(status_code=500, detail="Échec de l'encodage de la sortie.")
 
+    logger.info(
+        "Inférence terminée",
+        extra={
+            "event": "upscale_completed",
+            "request_id": req_id,
+            "input_shape": f"{bgr.shape[1]}x{bgr.shape[0]}",
+            "inference_ms": round(elapsed_ms, 1),
+            "vram_peak_mb": round(peak_mb, 1),
+            "ssim": ssim,
+        },
+    )
+
     return Response(
         content=png.tobytes(),
         media_type="image/png",
         headers={
+            "X-Request-ID": req_id,
             "X-Inference-Time-Ms": f"{elapsed_ms:.1f}",
             "X-VRAM-Usage-MB": f"{peak_mb:.1f}",
             "X-SSIM-Score": f"{ssim:.2f}",
