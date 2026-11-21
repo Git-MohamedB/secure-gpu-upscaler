@@ -23,8 +23,10 @@ jobs:
         run: ruff check --select E4,E7,E9,F --ignore E402 app tests scripts
       - name: Bytecode syntax check
         run: python -m compileall app tests scripts
-      - name: Run ingestion and DoS defense unit tests
-        run: pytest tests/test_pipeline.py -k "test_reject_oversized_file or test_reject_oversized_dimensions" -v
+      - name: Run ingestion, weights integrity, and CPU API integration tests
+        run: |
+          pytest tests/test_pipeline.py -k "test_reject_oversized_file or test_reject_oversized_dimensions" -v
+          pytest tests/test_api_cpu.py tests/test_download_weights.py -v
       - name: Trivy filesystem security scan
         uses: aquasecurity/trivy-action@master
         with:
