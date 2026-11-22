@@ -137,14 +137,14 @@ Voici le résultat obtenu directement en testant le modèle sur une photo nature
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.90\textwidth]{comparison_photo_before_after.png}
-    \caption{\textbf{Test visuel réel :} À gauche l'image d'entrée basse résolution ($256 \times 256$), au centre le zoom flou, et à droite la sortie traitée par mon moteur GPU ($1024 \times 1024$). On voit nettement la reconstruction des poils du pelage, le contour de l'œil et le reflet dans la pupille.}
+    \includegraphics[width=0.94\textwidth]{comparison_photo_before_after.png}
+    \caption{\textbf{Test visuel réel :} (a) vue globale ($1024 \times 1024$) avec zone de zoom encadrée, (b) zoom sur l'entrée basse résolution ($256 \times 256$), et (c) sortie traitée par mon moteur GPU ($1024 \times 1024$). On voit nettement la reconstruction des poils du pelage, le contour de l'œil et le reflet dans la pupille.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.86\textwidth]{vram_complexity_proof.png}
-    \caption{\textbf{Mesure de l'impact du tuilage :} Sans tuilage (courbe rouge), le GPU dépasse sa limite de 8 Go dès une image de 1024 pixels. Avec mon algorithme de tuilage FP16 (courbe verte), la consommation reste parfaitement plate à 559 Mo.}
+    \includegraphics[width=0.94\textwidth]{vram_complexity_proof.png}
+    \caption{\textbf{Mesure de l'impact du tuilage :} Sans tuilage (courbe rouge), le GPU dépasse sa limite de 8 Go dès une image de 1024 pixels. Avec mon algorithme de tuilage FP16 (courbe verte), la consommation reste bornée entre 559 et 562 Mo.}
 \end{figure}
 
 \begin{table}[H]
